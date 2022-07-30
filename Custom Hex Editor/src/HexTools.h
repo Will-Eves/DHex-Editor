@@ -3,9 +3,29 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 namespace HexTools {
     char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+    std::map<char, int> hex_chars_as_int = {
+        {'0', 0},
+        {'1', 1},
+        {'2', 2},
+        {'3', 3},
+        {'4', 4},
+        {'5', 5},
+        {'6', 6},
+        {'7', 7},
+        {'8', 8},
+        {'9', 9},
+        {'A', 10},
+        {'B', 11},
+        {'C', 12},
+        {'D', 13},
+        {'E', 14},
+        {'F', 15},
+    };
 
     struct HexByte {
         unsigned char a = '0';
@@ -49,392 +69,36 @@ namespace HexTools {
 
         unsigned char ToUnsignedChar() {
             unsigned int c = 0;
-            
-            if (b == '1') {
-                c += 1;
-            }
-            else if (b == '2') {
-                c += 2;
-            }
-            else if (b == '3') {
-                c += 3;
-            }
-            else if (b == '4') {
-                c += 4;
-            }
-            else if (b == '5') {
-                c += 5;
-            }
-            else if (b == '6') {
-                c += 6;
-            }
-            else if (b == '7') {
-                c += 7;
-            }
-            else if (b == '8') {
-                c += 8;
-            }
-            else if (b == '9') {
-                c += 9;
-            }
-            else if (b == 'A') {
-                c += 10;
-            }
-            else if (b == 'B') {
-                c += 11;
-            }
-            else if (b == 'C') {
-                c += 12;
-            }
-            else if (b == 'D') {
-                c += 13;
-            }
-            else if (b == 'E') {
-                c += 14;
-            }
-            else if (b == 'F') {
-                c += 15;
-            }
 
-            if (a == '1') {
-                c += 16;
-            }
-            else if (a == '2') {
-                c += 2 * 16;
-            }
-            else if (a == '3') {
-                c += 3 * 16;
-            }
-            else if (a == '4') {
-                c += 4 * 16;
-            }
-            else if (a == '5') {
-                c += 5 * 16;
-            }
-            else if (a == '6') {
-                c += 6 * 16;
-            }
-            else if (a == '7') {
-                c += 7 * 16;
-            }
-            else if (a == '8') {
-                c += 8 * 16;
-            }
-            else if (a == '9') {
-                c += 9 * 16;
-            }
-            else if (a == 'A') {
-                c += 10 * 16;
-            }
-            else if (a == 'B') {
-                c += 11 * 16;
-            }
-            else if (a == 'C') {
-                c += 12 * 16;
-            }
-            else if (a == 'D') {
-                c += 13 * 16;
-            }
-            else if (a == 'E') {
-                c += 14 * 16;
-            }
-            else if (a == 'F') {
-                c += 15 * 16;
-            }
+            c += hex_chars_as_int[b];
+            c += hex_chars_as_int[a] * 16;
 
             return (unsigned char)c;
         }
 
         unsigned int ToUnsignedInt() {
-            unsigned int c;
+            unsigned int c = 0;
             
-            if (b == '1') {
-                c += 1;
-            }
-            else if (b == '2') {
-                c += 2;
-            }
-            else if (b == '3') {
-                c += 3;
-            }
-            else if (b == '4') {
-                c += 4;
-            }
-            else if (b == '5') {
-                c += 5;
-            }
-            else if (b == '6') {
-                c += 6;
-            }
-            else if (b == '7') {
-                c += 7;
-            }
-            else if (b == '8') {
-                c += 8;
-            }
-            else if (b == '9') {
-                c += 9;
-            }
-            else if (b == 'A') {
-                c += 10;
-            }
-            else if (b == 'B') {
-                c += 11;
-            }
-            else if (b == 'C') {
-                c += 12;
-            }
-            else if (b == 'D') {
-                c += 13;
-            }
-            else if (b == 'E') {
-                c += 14;
-            }
-            else if (b == 'F') {
-                c += 15;
-            }
-
-            if (a == '1') {
-                c += 16;
-            }
-            else if (a == '2') {
-                c += 2 * 16;
-            }
-            else if (a == '3') {
-                c += 3 * 16;
-            }
-            else if (a == '4') {
-                c += 4 * 16;
-            }
-            else if (a == '5') {
-                c += 5 * 16;
-            }
-            else if (a == '6') {
-                c += 6 * 16;
-            }
-            else if (a == '7') {
-                c += 7 * 16;
-            }
-            else if (a == '8') {
-                c += 8 * 16;
-            }
-            else if (a == '9') {
-                c += 9 * 16;
-            }
-            else if (a == 'A') {
-                c += 10 * 16;
-            }
-            else if (a == 'B') {
-                c += 11 * 16;
-            }
-            else if (a == 'C') {
-                c += 12 * 16;
-            }
-            else if (a == 'D') {
-                c += 13 * 16;
-            }
-            else if (a == 'E') {
-                c += 14 * 16;
-            }
-            else if (a == 'F') {
-                c += 15 * 16;
-            }
+            c += hex_chars_as_int[b];
+            c += hex_chars_as_int[a] * 16;
 
             return c;
         }
 
         char ToChar() {
-            int c;
+            int c = 0;
             
-            if (b == '1') {
-                c += 1;
-            }
-            else if (b == '2') {
-                c += 2;
-            }
-            else if (b == '3') {
-                c += 3;
-            }
-            else if (b == '4') {
-                c += 4;
-            }
-            else if (b == '5') {
-                c += 5;
-            }
-            else if (b == '6') {
-                c += 6;
-            }
-            else if (b == '7') {
-                c += 7;
-            }
-            else if (b == '8') {
-                c += 8;
-            }
-            else if (b == '9') {
-                c += 9;
-            }
-            else if (b == 'A') {
-                c += 10;
-            }
-            else if (b == 'B') {
-                c += 11;
-            }
-            else if (b == 'C') {
-                c += 12;
-            }
-            else if (b == 'D') {
-                c += 13;
-            }
-            else if (b == 'E') {
-                c += 14;
-            }
-            else if (b == 'F') {
-                c += 15;
-            }
-
-            if (a == '1') {
-                c += 16;
-            }
-            else if (a == '2') {
-                c += 2 * 16;
-            }
-            else if (a == '3') {
-                c += 3 * 16;
-            }
-            else if (a == '4') {
-                c += 4 * 16;
-            }
-            else if (a == '5') {
-                c += 5 * 16;
-            }
-            else if (a == '6') {
-                c += 6 * 16;
-            }
-            else if (a == '7') {
-                c += 7 * 16;
-            }
-            else if (a == '8') {
-                c += 8 * 16;
-            }
-            else if (a == '9') {
-                c += 9 * 16;
-            }
-            else if (a == 'A') {
-                c += 10 * 16;
-            }
-            else if (a == 'B') {
-                c += 11 * 16;
-            }
-            else if (a == 'C') {
-                c += 12 * 16;
-            }
-            else if (a == 'D') {
-                c += 13 * 16;
-            }
-            else if (a == 'E') {
-                c += 14 * 16;
-            }
-            else if (a == 'F') {
-                c += 15 * 16;
-            }
+            c += hex_chars_as_int[b];
+            c += hex_chars_as_int[a] * 16;
 
             return c;
         }
 
         int ToInt() {
-            int c;
+            int c = 0;
             
-            if (b == '1') {
-                c += 1;
-            }
-            else if (b == '2') {
-                c += 2;
-            }
-            else if (b == '3') {
-                c += 3;
-            }
-            else if (b == '4') {
-                c += 4;
-            }
-            else if (b == '5') {
-                c += 5;
-            }
-            else if (b == '6') {
-                c += 6;
-            }
-            else if (b == '7') {
-                c += 7;
-            }
-            else if (b == '8') {
-                c += 8;
-            }
-            else if (b == '9') {
-                c += 9;
-            }
-            else if (b == 'A') {
-                c += 10;
-            }
-            else if (b == 'B') {
-                c += 11;
-            }
-            else if (b == 'C') {
-                c += 12;
-            }
-            else if (b == 'D') {
-                c += 13;
-            }
-            else if (b == 'E') {
-                c += 14;
-            }
-            else if (b == 'F') {
-                c += 15;
-            }
-
-            if (a == '1') {
-                c += 16;
-            }
-            else if (a == '2') {
-                c += 2 * 16;
-            }
-            else if (a == '3') {
-                c += 3 * 16;
-            }
-            else if (a == '4') {
-                c += 4 * 16;
-            }
-            else if (a == '5') {
-                c += 5 * 16;
-            }
-            else if (a == '6') {
-                c += 6 * 16;
-            }
-            else if (a == '7') {
-                c += 7 * 16;
-            }
-            else if (a == '8') {
-                c += 8 * 16;
-            }
-            else if (a == '9') {
-                c += 9 * 16;
-            }
-            else if (a == 'A') {
-                c += 10 * 16;
-            }
-            else if (a == 'B') {
-                c += 11 * 16;
-            }
-            else if (a == 'C') {
-                c += 12 * 16;
-            }
-            else if (a == 'D') {
-                c += 13 * 16;
-            }
-            else if (a == 'E') {
-                c += 14 * 16;
-            }
-            else if (a == 'F') {
-                c += 15 * 16;
-            }
+            c += hex_chars_as_int[b];
+            c += hex_chars_as_int[a] * 16;
 
             return c;
         }
@@ -473,7 +137,6 @@ namespace HexTools {
         }
 
         std::string Format(int horizontalSpacing = 0, int verticalSpacing = 0, int breakEvery = -1, int startByte=0, int endByte=-1) {
-            
             if (endByte == -1) endByte = data.size();
             
             std::stringstream stream;
