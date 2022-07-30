@@ -1,0 +1,13 @@
+﻿  main.cpp
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(133,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(134,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(135,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(213,47): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(352,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(398,18): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(598,60): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(601,34): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(706,47): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(772,34): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(874,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  Custom Hex Editor.vcxproj -> C:\Users\willi\source\repos\Custom Hex Editor\x64\Debug\Custom Hex Editor.exe

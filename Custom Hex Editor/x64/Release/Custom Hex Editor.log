@@ -1,0 +1,19 @@
+﻿  main.cpp
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\HexTools.h(477,1): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(134,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(135,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(136,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(214,47): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(353,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(399,18): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(602,34): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(710,47): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(777,34): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(921,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\source\repos\Custom Hex Editor\Custom Hex Editor\src\main.cpp(1003,14): warning C4244: '=': conversion from 'double' to 'unsigned int', possible loss of data
+  Generating code
+  1 of 521 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  Custom Hex Editor.vcxproj -> C:\Users\willi\source\repos\Custom Hex Editor\x64\Release\Custom Hex Editor.exe
