@@ -11,8 +11,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <fstream>
-#include <iostream>
 #include <stdexcept>
 #include <sstream>
 
@@ -22,9 +20,9 @@ HexTools::HexData hexData;
 
 /*** defines ***/
 
-#define KILO_VERSION "0.1"
-#define KILO_TAB_STOP 4
-#define KILO_QUIT_TIMES 3
+#define DHEX_VERSION "0.2"
+#define DHEX_TAB_STOP 4
+#define DHEX_QUIT_TIMES 3
 
 using Term::color;
 using Term::cursor_off;
@@ -90,202 +88,9 @@ struct dhexConfig {
 
 struct dhexConfig E;
 
-/*** filetypes ***/
-
-const char* C_HL_extensions[] = { ".c", ".h", ".cpp", nullptr };
-const char* C_HL_keywords[] = {
-    "switch",    "if",      "while",   "for",    "break",
-    "continue",  "return",  "else",    "struct", "union",
-    "typedef",   "static",  "enum",    "class",  "case",
-
-    "int|",      "long|",   "double|", "float|", "char|",
-    "unsigned|", "signed|", "void|",   nullptr };
-
-struct dhexSyntax HLDB[] = {
-    {"c", C_HL_extensions, C_HL_keywords, "//", "/*", "*/",
-     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
-};
-
-#define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
-
 /*** prototypes ***/
 
 char* dhexPrompt(const char* prompt, void (*callback)(char*, int));
-
-/*** syntax highlighting ***/
-
-int is_separator(int c) {
-    return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != nullptr;
-}
-
-void dhexUpdateSyntax(erow* row) {
-    row->hl = (unsigned char*)realloc(row->hl, row->rsize);
-    memset(row->hl, HL_NORMAL, row->rsize);
-
-    if (E.syntax == nullptr)
-        return;
-
-    const char** keywords = E.syntax->keywords;
-
-    const char* scs = E.syntax->singleline_comment_start;
-    const char* mcs = E.syntax->multiline_comment_start;
-    const char* mce = E.syntax->multiline_comment_end;
-
-    int scs_len = scs ? strlen(scs) : 0;
-    int mcs_len = mcs ? strlen(mcs) : 0;
-    int mce_len = mce ? strlen(mce) : 0;
-
-    int prev_sep = 1;
-    int in_string = 0;
-    int in_comment = (row->idx > 0 && E.row[row->idx - 1].hl_open_comment);
-
-    int i = 0;
-    while (i < row->rsize) {
-        char c = row->render[i];
-        unsigned char prev_hl = (i > 0) ? row->hl[i - 1] : (char)HL_NORMAL;
-
-        if (scs_len && !in_string && !in_comment) {
-            if (!strncmp(&row->render[i], scs, scs_len)) {
-                memset(&row->hl[i], HL_COMMENT, row->rsize - i);
-                break;
-            }
-        }
-
-        if (mcs_len && mce_len && !in_string) {
-            if (in_comment) {
-                row->hl[i] = HL_MLCOMMENT;
-                if (!strncmp(&row->render[i], mce, mce_len)) {
-                    memset(&row->hl[i], HL_MLCOMMENT, mce_len);
-                    i += mce_len;
-                    in_comment = 0;
-                    prev_sep = 1;
-                    continue;
-                }
-                else {
-                    i++;
-                    continue;
-                }
-            }
-            else if (!strncmp(&row->render[i], mcs, mcs_len)) {
-                memset(&row->hl[i], HL_MLCOMMENT, mcs_len);
-                i += mcs_len;
-                in_comment = 1;
-                continue;
-            }
-        }
-
-        if (E.syntax->flags & HL_HIGHLIGHT_STRINGS) {
-            if (in_string) {
-                row->hl[i] = HL_STRING;
-                if (c == '\\' && i + 1 < row->rsize) {
-                    row->hl[i + 1] = HL_STRING;
-                    i += 2;
-                    continue;
-                }
-                if (c == in_string)
-                    in_string = 0;
-                i++;
-                prev_sep = 1;
-                continue;
-            }
-            else {
-                if (c == '"' || c == '\'') {
-                    in_string = c;
-                    row->hl[i] = HL_STRING;
-                    i++;
-                    continue;
-                }
-            }
-        }
-
-        if (E.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
-            if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
-                (c == '.' && prev_hl == HL_NUMBER)) {
-                row->hl[i] = HL_NUMBER;
-                i++;
-                prev_sep = 0;
-                continue;
-            }
-        }
-
-        if (prev_sep) {
-            int j;
-            for (j = 0; keywords[j]; j++) {
-                int klen = strlen(keywords[j]);
-                int kw2 = keywords[j][klen - 1] == '|';
-                if (kw2)
-                    klen--;
-
-                if (!strncmp(&row->render[i], keywords[j], klen) &&
-                    is_separator(row->render[i + klen])) {
-                    memset(&row->hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, klen);
-                    i += klen;
-                    break;
-                }
-            }
-            if (keywords[j] != nullptr) {
-                prev_sep = 0;
-                continue;
-            }
-        }
-
-        prev_sep = is_separator(c);
-        i++;
-    }
-
-    int changed = (row->hl_open_comment != in_comment);
-    row->hl_open_comment = in_comment;
-    if (changed && row->idx + 1 < E.numrows)
-        dhexUpdateSyntax(&E.row[row->idx + 1]);
-}
-
-fg dhexSyntaxToColor(int hl) {
-    switch (hl) {
-    case HL_COMMENT:
-    case HL_MLCOMMENT:
-        return fg::cyan;
-    case HL_KEYWORD1:
-        return fg::yellow;
-    case HL_KEYWORD2:
-        return fg::green;
-    case HL_STRING:
-        return fg::magenta;
-    case HL_NUMBER:
-        return fg::red;
-    case HL_MATCH:
-        return fg::blue;
-    default:
-        return fg::gray;
-    }
-}
-
-void dhexSelectSyntaxHighlight() {
-    E.syntax = nullptr;
-    if (E.filename == nullptr)
-        return;
-
-    char* ext = strrchr(E.filename, '.');
-
-    for (auto& j : HLDB) {
-        struct dhexSyntax* s = &j;
-        unsigned int i = 0;
-        while (s->filematch[i]) {
-            int is_ext = (s->filematch[i][0] == '.');
-            if ((is_ext && ext && !strcmp(ext, s->filematch[i])) ||
-                (!is_ext && strstr(E.filename, s->filematch[i]))) {
-                E.syntax = s;
-
-                int filerow;
-                for (filerow = 0; filerow < E.numrows; filerow++) {
-                    dhexUpdateSyntax(&E.row[filerow]);
-                }
-
-                return;
-            }
-            i++;
-        }
-    }
-}
 
 /*** row operations ***/
 
@@ -293,7 +98,7 @@ int dhexRowCxToRx(erow* row, int cx) {
     int rx = 0;
     for (int j = 0; j < cx; j++) {
         if (row->chars[j] == '\t')
-            rx += (KILO_TAB_STOP - 1) - (rx % KILO_TAB_STOP);
+            rx += (DHEX_TAB_STOP - 1) - (rx % DHEX_TAB_STOP);
         rx++;
     }
     return rx;
@@ -304,7 +109,7 @@ int dhexRowRxToCx(erow* row, int rx) {
     int cx{};
     for (cx = 0; cx < row->size; cx++) {
         if (row->chars[cx] == '\t')
-            cur_rx += (KILO_TAB_STOP - 1) - (cur_rx % KILO_TAB_STOP);
+            cur_rx += (DHEX_TAB_STOP - 1) - (cur_rx % DHEX_TAB_STOP);
         cur_rx++;
 
         if (cur_rx > rx)
@@ -320,13 +125,13 @@ void dhexUpdateRow(erow* row) {
             tabs++;
 
     free(row->render);
-    row->render = (char*)malloc(row->size + tabs * (KILO_TAB_STOP - 1) + 1);
+    row->render = (char*)malloc(row->size + tabs * (DHEX_TAB_STOP - 1) + 1);
 
     int idx = 0;
     for (int j = 0; j < row->size; j++) {
         if (row->chars[j] == '\t') {
             row->render[idx++] = ' ';
-            while (idx % KILO_TAB_STOP != 0)
+            while (idx % DHEX_TAB_STOP != 0)
                 row->render[idx++] = ' ';
         }
         else {
@@ -335,8 +140,6 @@ void dhexUpdateRow(erow* row) {
     }
     row->render[idx] = '\0';
     row->rsize = idx;
-
-    dhexUpdateSyntax(row);
 }
 
 void dhexInsertRow(int at, const char* s, size_t len) {
@@ -590,7 +393,6 @@ void dhexOpen(char* filename) {
 #else
     E.filename = strdup(filename);
 #endif
-    dhexSelectSyntaxHighlight();
 
     dhexClear();
 
@@ -643,7 +445,6 @@ void dhexSave() {
             dhexSetStatusMessage("Save aborted");
             return;
         }
-        dhexSelectSyntaxHighlight();
     }
 
     hexData.Save(E.filename);
@@ -809,17 +610,34 @@ void dhexDrawRows(std::string& ab) {
             hd.data = bytes;
 
             std::string hdStr = hd.ToString();
-
+            std::string hdStrOut;
             for (int i = 0; i < hdStr.size(); i++) {
+                if (E.cy == filerow && floor(E.rx / 3) == i) {
+                    std::string colstr = "\033[" + std::to_string(static_cast<unsigned int>(style::reversed)) + 'm';
+                    hdStrOut += colstr;
+                }
+
                 if (hdStr[i] < 32 || hdStr[i] > 126) {
-                    hdStr[i] = '.';
+                    hdStrOut += '.';
+                }
+                else {
+                    hdStrOut += hdStr[i];
+                }
+
+                if (E.cy == filerow && floor(E.rx / 3) == i) {
+                    std::string colstr = "\033[" + std::to_string(static_cast<unsigned int>(style::reset)) + 'm';
+                    hdStrOut += colstr;
                 }
             }
 
-            str += hdStr;
+            int strsize = str.length() + hdStr.length();
+            str += hdStrOut;
 
-            if (str.size() != 28) {
-                while (str.size() != 28) str += '.';
+            int left = 28 - strsize;
+            if (strsize != 28) {
+                for (int i = 0; i < left; i++) {
+                    str += '.';
+                }
             }
         }
 
@@ -852,8 +670,7 @@ void dhexDrawRows(std::string& ab) {
                 len = E.screencols;
             char* c = &E.row[filerow].render[E.coloff];
             unsigned char* hl = &E.row[filerow].hl[E.coloff];
-            fg current_color =
-                fg::black;  // black is not used in dhexSyntaxToColor
+            fg current_color = fg::black;
             int j;
             for (j = 0; j < len; j++) {
                 if (iscntrl(c[j])) {
@@ -865,19 +682,7 @@ void dhexDrawRows(std::string& ab) {
                         ab.append(color(current_color));
                     }
                 }
-                else if (hl[j] == HL_NORMAL) {
-                    if (current_color != fg::black) {
-                        ab.append(color(fg::reset));
-                        current_color = fg::black;
-                    }
-                    ab.append(std::string(&c[j], 1));
-                }
                 else {
-                    fg color = dhexSyntaxToColor(hl[j]);
-                    if (color != current_color) {
-                        current_color = color;
-                        ab.append(Term::color(color));
-                    }
                     ab.append(std::string(&c[j], 1));
                 }
             }
@@ -1012,7 +817,7 @@ void dhexGoto() {
 }
 
 bool dhexProcessKeypress() {
-    static int quit_times = KILO_QUIT_TIMES;
+    static int quit_times = DHEX_QUIT_TIMES;
 
     int c = Term::read_key();
 
@@ -1108,7 +913,7 @@ bool dhexProcessKeypress() {
         break;
     }
 
-    quit_times = KILO_QUIT_TIMES;
+    quit_times = DHEX_QUIT_TIMES;
     return true;
 }
 
@@ -1133,35 +938,31 @@ void initdhex() {
 }
 
 int main(int argc, char* argv[]) {
-    // We must put all code in try/catch block, otherwise destructors are not
-    // being called when exception happens and the terminal is not put into
-    // correct state.
     try {
-        // check if the terminal is capable of handling input
         if (!Term::is_stdin_a_tty()) {
             std::cout << "The terminal is not attached to a TTY and therefore can't catch user input. Exiting...\n";
             return 1;
         }
+
         Terminal term(true, true, false, false);
+
         initdhex();
+
         if (argc >= 2) {
             dhexOpen(argv[1]);
         }
 
-        dhexSetStatusMessage(
-            "HELP: Ctrl-S = save | Ctrl-O = open | Ctrl-G = goto | Ctrl-Q = quit");
+        dhexSetStatusMessage("HELP: Ctrl-S = save | Ctrl-O = open | Ctrl-G = goto | Ctrl-Q = quit");
 
         dhexRefreshScreen();
         while (dhexProcessKeypress()) {
             dhexRefreshScreen();
         }
-    }
-    catch (const std::runtime_error& re) {
-        std::cerr << "Runtime error: " << re.what() << std::endl;
+    }catch (const std::runtime_error& re) {
+        std::cerr << "Editor Runtime error: " << re.what() << std::endl;
         return 2;
-    }
-    catch (...) {
-        std::cerr << "Unknown error." << std::endl;
+    }catch (...) {
+        std::cerr << "Editor error." << std::endl;
         return 1;
     }
     return 0;
