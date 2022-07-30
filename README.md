@@ -1,2 +1,2 @@
 # DHex-Editor
-A windows terminal-based hex editor based on my other lib HexTools
+A terminal-based windows hex editor based on my other lib HexTools
