@@ -1,7 +1,7 @@
-/*** includes ***/
-
+/** https://github.com/Will-Eves/HexTools By William Eves / Devparty **/
 #include "HexTools.h"
 
+/** https://github.com/jupyter-xeus/cpp-terminal By Jupyter Xeus **/ 
 #include "../vendor/cppterminal/base.hpp"
 #include "../vendor/cppterminal/input.hpp"
 
