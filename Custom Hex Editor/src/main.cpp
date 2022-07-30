@@ -36,7 +36,7 @@ using Term::move_cursor;
 using Term::style;
 using Term::Terminal;
 
-enum editorHighlight {
+enum dhexHighlight {
     HL_NORMAL = 0,
     HL_COMMENT,
     HL_MLCOMMENT,
@@ -52,7 +52,7 @@ enum editorHighlight {
 
 /*** data ***/
 
-struct editorSyntax {
+struct dhexSyntax {
     const char* filetype;
     const char** filematch;
     const char** keywords;
@@ -72,7 +72,7 @@ typedef struct erow {
     int hl_open_comment;
 } erow;
 
-struct editorConfig {
+struct dhexConfig {
     int cx, cy;
     int rx;
     int rowoff;
@@ -85,10 +85,10 @@ struct editorConfig {
     char* filename;
     char statusmsg[80];
     time_t statusmsg_time;
-    struct editorSyntax* syntax;
+    struct dhexSyntax* syntax;
 };
 
-struct editorConfig E;
+struct dhexConfig E;
 
 /*** filetypes ***/
 
@@ -101,7 +101,7 @@ const char* C_HL_keywords[] = {
     "int|",      "long|",   "double|", "float|", "char|",
     "unsigned|", "signed|", "void|",   nullptr };
 
-struct editorSyntax HLDB[] = {
+struct dhexSyntax HLDB[] = {
     {"c", C_HL_extensions, C_HL_keywords, "//", "/*", "*/",
      HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
 };
@@ -110,7 +110,7 @@ struct editorSyntax HLDB[] = {
 
 /*** prototypes ***/
 
-char* editorPrompt(const char* prompt, void (*callback)(char*, int));
+char* dhexPrompt(const char* prompt, void (*callback)(char*, int));
 
 /*** syntax highlighting ***/
 
@@ -118,7 +118,7 @@ int is_separator(int c) {
     return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != nullptr;
 }
 
-void editorUpdateSyntax(erow* row) {
+void dhexUpdateSyntax(erow* row) {
     row->hl = (unsigned char*)realloc(row->hl, row->rsize);
     memset(row->hl, HL_NORMAL, row->rsize);
 
@@ -236,10 +236,10 @@ void editorUpdateSyntax(erow* row) {
     int changed = (row->hl_open_comment != in_comment);
     row->hl_open_comment = in_comment;
     if (changed && row->idx + 1 < E.numrows)
-        editorUpdateSyntax(&E.row[row->idx + 1]);
+        dhexUpdateSyntax(&E.row[row->idx + 1]);
 }
 
-fg editorSyntaxToColor(int hl) {
+fg dhexSyntaxToColor(int hl) {
     switch (hl) {
     case HL_COMMENT:
     case HL_MLCOMMENT:
@@ -259,7 +259,7 @@ fg editorSyntaxToColor(int hl) {
     }
 }
 
-void editorSelectSyntaxHighlight() {
+void dhexSelectSyntaxHighlight() {
     E.syntax = nullptr;
     if (E.filename == nullptr)
         return;
@@ -267,7 +267,7 @@ void editorSelectSyntaxHighlight() {
     char* ext = strrchr(E.filename, '.');
 
     for (auto& j : HLDB) {
-        struct editorSyntax* s = &j;
+        struct dhexSyntax* s = &j;
         unsigned int i = 0;
         while (s->filematch[i]) {
             int is_ext = (s->filematch[i][0] == '.');
@@ -277,7 +277,7 @@ void editorSelectSyntaxHighlight() {
 
                 int filerow;
                 for (filerow = 0; filerow < E.numrows; filerow++) {
-                    editorUpdateSyntax(&E.row[filerow]);
+                    dhexUpdateSyntax(&E.row[filerow]);
                 }
 
                 return;
@@ -289,7 +289,7 @@ void editorSelectSyntaxHighlight() {
 
 /*** row operations ***/
 
-int editorRowCxToRx(erow* row, int cx) {
+int dhexRowCxToRx(erow* row, int cx) {
     int rx = 0;
     for (int j = 0; j < cx; j++) {
         if (row->chars[j] == '\t')
@@ -299,7 +299,7 @@ int editorRowCxToRx(erow* row, int cx) {
     return rx;
 }
 
-int editorRowRxToCx(erow* row, int rx) {
+int dhexRowRxToCx(erow* row, int rx) {
     int cur_rx = 0;
     int cx{};
     for (cx = 0; cx < row->size; cx++) {
@@ -313,7 +313,7 @@ int editorRowRxToCx(erow* row, int rx) {
     return cx;
 }
 
-void editorUpdateRow(erow* row) {
+void dhexUpdateRow(erow* row) {
     int tabs = 0;
     for (int j = 0; j < row->size; j++)
         if (row->chars[j] == '\t')
@@ -336,10 +336,10 @@ void editorUpdateRow(erow* row) {
     row->render[idx] = '\0';
     row->rsize = idx;
 
-    editorUpdateSyntax(row);
+    dhexUpdateSyntax(row);
 }
 
-void editorInsertRow(int at, const char* s, size_t len) {
+void dhexInsertRow(int at, const char* s, size_t len) {
     if (at < 0 || at > E.numrows)
         return;
 
@@ -359,22 +359,22 @@ void editorInsertRow(int at, const char* s, size_t len) {
     E.row[at].render = nullptr;
     E.row[at].hl = nullptr;
     E.row[at].hl_open_comment = 0;
-    editorUpdateRow(&E.row[at]);
+    dhexUpdateRow(&E.row[at]);
 
     E.numrows++;
     E.dirty++;
 }
 
-void editorFreeRow(erow* row) {
+void dhexFreeRow(erow* row) {
     free(row->render);
     free(row->chars);
     free(row->hl);
 }
 
-void editorDelRow(int at) {
+void dhexDelRow(int at) {
     if (at < 0 || at >= E.numrows)
         return;
-    editorFreeRow(&E.row[at]);
+    dhexFreeRow(&E.row[at]);
     memmove(&E.row[at], &E.row[at + 1], sizeof(erow) * (E.numrows - at - 1));
     for (int j = at; j < E.numrows - 1; j++)
         E.row[j].idx--;
@@ -382,38 +382,38 @@ void editorDelRow(int at) {
     E.dirty++;
 }
 
-void editorRowInsertChar(erow* row, int at, int c) {
+void dhexRowInsertChar(erow* row, int at, int c) {
     if (at < 0 || at > row->size)
         at = row->size;
     row->chars = (char*)realloc(row->chars, row->size + 2);
     memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
     row->size++;
     row->chars[at] = c;
-    editorUpdateRow(row);
+    dhexUpdateRow(row);
     E.dirty++;
 }
 
-void editorRowAppendString(erow* row, char* s, size_t len) {
+void dhexRowAppendString(erow* row, char* s, size_t len) {
     row->chars = (char*)realloc(row->chars, row->size + len + 1);
     memcpy(&row->chars[row->size], s, len);
     row->size += len;
     row->chars[row->size] = '\0';
-    editorUpdateRow(row);
+    dhexUpdateRow(row);
     E.dirty++;
 }
 
-void editorRowDelChar(erow* row, int at) {
+void dhexRowDelChar(erow* row, int at) {
     if (at < 0 || at >= row->size)
         return;
     memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
     row->size--;
-    editorUpdateRow(row);
+    dhexUpdateRow(row);
     E.dirty++;
 }
 
-/*** editor operations ***/
+/*** dhex operations ***/
 
-void editorMoveCursor(int key) {
+void dhexMoveCursor(int key) {
     erow* row = (E.cy >= E.numrows) ? nullptr : &E.row[E.cy];
 
     switch (key) {
@@ -454,7 +454,7 @@ void editorMoveCursor(int key) {
     }
 }
 
-void editorInsertChar(int c) {
+void dhexInsertChar(int c) {
     // Change to insert if already char
 
     char chr = c;
@@ -483,52 +483,52 @@ void editorInsertChar(int c) {
 
 
         if (E.cy == E.numrows) {
-            editorInsertRow(E.numrows, "", 0);
+            dhexInsertRow(E.numrows, "", 0);
         }
 
         if (E.row[E.cy].size > E.cx) {
             E.row[E.cy].chars[E.cx] = chr;
-            editorUpdateRow(&E.row[E.cy]);
-            editorMoveCursor(Key::ARROW_RIGHT);
+            dhexUpdateRow(&E.row[E.cy]);
+            dhexMoveCursor(Key::ARROW_RIGHT);
 
             if ((E.cx + 1) % 3 == 0) {
-                editorMoveCursor(Key::ARROW_RIGHT);
+                dhexMoveCursor(Key::ARROW_RIGHT);
             }
         }
         else {
-            editorRowInsertChar(&E.row[E.cy], E.cx, c1);
+            dhexRowInsertChar(&E.row[E.cy], E.cx, c1);
             E.cx++;
 
             if ((E.cx + 1) % 3 == 0) {
-                editorRowInsertChar(&E.row[E.cy], E.cx, ' ');
+                dhexRowInsertChar(&E.row[E.cy], E.cx, ' ');
                 E.cx++;
             }
         }
 
         if (E.cx >= 3 * 16 - 1) {
             E.cx = 0;
-            editorMoveCursor(Key::ARROW_DOWN);
+            dhexMoveCursor(Key::ARROW_DOWN);
         }
     }
 }
 
-void editorInsertNewline() {
+void dhexInsertNewline() {
     if (E.cx == 0) {
-        editorInsertRow(E.cy, "", 0);
+        dhexInsertRow(E.cy, "", 0);
     }
     else {
         erow* row = &E.row[E.cy];
-        editorInsertRow(E.cy + 1, &row->chars[E.cx], row->size - E.cx);
+        dhexInsertRow(E.cy + 1, &row->chars[E.cx], row->size - E.cx);
         row = &E.row[E.cy];
         row->size = E.cx;
         row->chars[row->size] = '\0';
-        editorUpdateRow(row);
+        dhexUpdateRow(row);
     }
     E.cy++;
     E.cx = 0;
 }
 
-void editorDelChar() {
+void dhexDelChar() {
     if (E.cy == E.numrows)
         return;
     if (E.cx == 0 && E.cy == 0)
@@ -536,20 +536,20 @@ void editorDelChar() {
 
     erow* row = &E.row[E.cy];
     if (E.cx > 0) {
-        editorRowDelChar(row, E.cx - 1);
+        dhexRowDelChar(row, E.cx - 1);
         E.cx--;
     }
     else {
         E.cx = E.row[E.cy - 1].size;
-        editorRowAppendString(&E.row[E.cy - 1], row->chars, row->size);
-        editorDelRow(E.cy);
+        dhexRowAppendString(&E.row[E.cy - 1], row->chars, row->size);
+        dhexDelRow(E.cy);
         E.cy--;
     }
 }
 
 /*** file i/o ***/
 
-char* editorRowsToString(int* buflen) {
+char* dhexRowsToString(int* buflen) {
     int totlen = 0;
     for (int j = 0; j < E.numrows; j++)
         totlen += E.row[j].size + 1;
@@ -567,7 +567,7 @@ char* editorRowsToString(int* buflen) {
     return buf;
 }
 
-void editorSetStatusMessage(const char* fmt, ...) {
+void dhexSetStatusMessage(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
@@ -575,12 +575,12 @@ void editorSetStatusMessage(const char* fmt, ...) {
     E.statusmsg_time = time(nullptr);
 }
 
-void editorClear() {
+void dhexClear() {
     E.numrows = 0;
     E.row = nullptr;
 }
 
-void editorOpen(char* filename) {
+void dhexOpen(char* filename) {
     // Open Into Hexdata
     hexData = HexTools::HexData(filename);
 
@@ -590,9 +590,9 @@ void editorOpen(char* filename) {
 #else
     E.filename = strdup(filename);
 #endif
-    editorSelectSyntaxHighlight();
+    dhexSelectSyntaxHighlight();
 
-    editorClear();
+    dhexClear();
 
     std::string line;
     std::stringstream data;
@@ -603,7 +603,7 @@ void editorOpen(char* filename) {
         while (linelen > 0 &&
             (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
             linelen--;
-        editorInsertRow(E.numrows, line.c_str(), linelen);
+        dhexInsertRow(E.numrows, line.c_str(), linelen);
         std::getline(data, line);
     }
     E.dirty = 0;
@@ -612,7 +612,7 @@ void editorOpen(char* filename) {
     E.cy = 0;
 }
 
-void editorSave() {
+void dhexSave() {
     std::string data;
     for (int i = 0; i < E.numrows; i++) {
         erow row = E.row[i];
@@ -638,32 +638,32 @@ void editorSave() {
     hexData.data = bytes;
 
     if (E.filename == nullptr) {
-        E.filename = editorPrompt("Save as: %s (ESC to cancel)", nullptr);
+        E.filename = dhexPrompt("Save as: %s (ESC to cancel)", nullptr);
         if (E.filename == nullptr) {
-            editorSetStatusMessage("Save aborted");
+            dhexSetStatusMessage("Save aborted");
             return;
         }
-        editorSelectSyntaxHighlight();
+        dhexSelectSyntaxHighlight();
     }
 
     hexData.Save(E.filename);
 
-    editorSetStatusMessage("%d bytes written to disk", hexData.data.size());
+    dhexSetStatusMessage("%d bytes written to disk", hexData.data.size());
 }
 
-void editorLoad() {
-    std::string filename = editorPrompt("Open file: %s (ESC to cancel)", nullptr);
+void dhexLoad() {
+    std::string filename = dhexPrompt("Open file: %s (ESC to cancel)", nullptr);
     if (filename.size() == 0) {
-        editorSetStatusMessage("Open aborted");
+        dhexSetStatusMessage("Open aborted");
         return;
     }
 
-    editorOpen((char*)filename.c_str());
+    dhexOpen((char*)filename.c_str());
 }
 
 /*** find ***/
 
-void editorFindCallback(char* query, int key) {
+void dhexFindCallback(char* query, int key) {
     static int last_match = -1;
     static int direction = 1;
 
@@ -707,7 +707,7 @@ void editorFindCallback(char* query, int key) {
         if (match) {
             last_match = current;
             E.cy = current;
-            E.cx = editorRowRxToCx(row, match - row->render);
+            E.cx = dhexRowRxToCx(row, match - row->render);
             E.rowoff = E.numrows;
 
             saved_hl_line = current;
@@ -719,14 +719,14 @@ void editorFindCallback(char* query, int key) {
     }
 }
 
-void editorFind() {
+void dhexFind() {
     int saved_cx = E.cx;
     int saved_cy = E.cy;
     int saved_coloff = E.coloff;
     int saved_rowoff = E.rowoff;
 
     char* query =
-        editorPrompt("Search: %s (Use ESC/Arrows/Enter)", editorFindCallback);
+        dhexPrompt("Search: %s (Use ESC/Arrows/Enter)", dhexFindCallback);
 
     if (query) {
         free(query);
@@ -741,10 +741,10 @@ void editorFind() {
 
 /*** output ***/
 
-void editorScroll() {
+void dhexScroll() {
     E.rx = 0;
     if (E.cy < E.numrows) {
-        E.rx = editorRowCxToRx(&E.row[E.cy], E.cx);
+        E.rx = dhexRowCxToRx(&E.row[E.cy], E.cx);
     }
 
     if (E.cy < E.rowoff) {
@@ -761,7 +761,7 @@ void editorScroll() {
     }
 }
 
-void editorDrawRows(std::string& ab) {
+void dhexDrawRows(std::string& ab) {
     ab.append(" Offset   | 0123456789ABCDEF | 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f");
     ab.append(erase_to_eol());
     ab.append("\r\n");
@@ -853,7 +853,7 @@ void editorDrawRows(std::string& ab) {
             char* c = &E.row[filerow].render[E.coloff];
             unsigned char* hl = &E.row[filerow].hl[E.coloff];
             fg current_color =
-                fg::black;  // black is not used in editorSyntaxToColor
+                fg::black;  // black is not used in dhexSyntaxToColor
             int j;
             for (j = 0; j < len; j++) {
                 if (iscntrl(c[j])) {
@@ -873,7 +873,7 @@ void editorDrawRows(std::string& ab) {
                     ab.append(std::string(&c[j], 1));
                 }
                 else {
-                    fg color = editorSyntaxToColor(hl[j]);
+                    fg color = dhexSyntaxToColor(hl[j]);
                     if (color != current_color) {
                         current_color = color;
                         ab.append(Term::color(color));
@@ -889,7 +889,7 @@ void editorDrawRows(std::string& ab) {
     }
 }
 
-void editorDrawStatusBar(std::string& ab) {
+void dhexDrawStatusBar(std::string& ab) {
     ab.append(color(style::reversed));
     char status[80], rstatus[80];
     int len = snprintf(status, sizeof(status), "%.20s - %d lines %s",
@@ -915,7 +915,7 @@ void editorDrawStatusBar(std::string& ab) {
     ab.append("\r\n");
 }
 
-void editorDrawMessageBar(std::string& ab) {
+void dhexDrawMessageBar(std::string& ab) {
     ab.append(erase_to_eol());
     int msglen = strlen(E.statusmsg);
     if (msglen > E.screencols)
@@ -924,8 +924,8 @@ void editorDrawMessageBar(std::string& ab) {
         ab.append(std::string(E.statusmsg, msglen));
 }
 
-void editorRefreshScreen() {
-    editorScroll();
+void dhexRefreshScreen() {
+    dhexScroll();
 
     std::string ab;
     ab.reserve(16 * 1024);
@@ -933,9 +933,9 @@ void editorRefreshScreen() {
     ab.append(cursor_off());
     ab.append(move_cursor(1, 1));
 
-    editorDrawRows(ab);
-    editorDrawStatusBar(ab);
-    editorDrawMessageBar(ab);
+    dhexDrawRows(ab);
+    dhexDrawStatusBar(ab);
+    dhexDrawMessageBar(ab);
 
     ab.append(move_cursor((E.cy - E.rowoff) + 2, (E.rx - E.coloff) + 13 + 19));
 
@@ -946,7 +946,7 @@ void editorRefreshScreen() {
 
 /*** input ***/
 
-char* editorPrompt(const char* prompt, void (*callback)(char*, int)) {
+char* dhexPrompt(const char* prompt, void (*callback)(char*, int)) {
     size_t bufsize = 128;
     char* buf = (char*)malloc(bufsize);
 
@@ -954,8 +954,8 @@ char* editorPrompt(const char* prompt, void (*callback)(char*, int)) {
     buf[0] = '\0';
 
     while (true) {
-        editorSetStatusMessage(prompt, buf);
-        editorRefreshScreen();
+        dhexSetStatusMessage(prompt, buf);
+        dhexRefreshScreen();
 
         int c = Term::read_key();
         if (c == Key::DEL || c == Key::CTRL + 'h' || c == Key::BACKSPACE) {
@@ -963,7 +963,7 @@ char* editorPrompt(const char* prompt, void (*callback)(char*, int)) {
                 buf[--buflen] = '\0';
         }
         else if (c == Key::ESC) {
-            editorSetStatusMessage("");
+            dhexSetStatusMessage("");
             if (callback)
                 callback(buf, c);
             free(buf);
@@ -971,7 +971,7 @@ char* editorPrompt(const char* prompt, void (*callback)(char*, int)) {
         }
         else if (c == Key::ENTER) {
             if (buflen != 0) {
-                editorSetStatusMessage("");
+                dhexSetStatusMessage("");
                 if (callback)
                     callback(buf, c);
                 return buf;
@@ -991,8 +991,8 @@ char* editorPrompt(const char* prompt, void (*callback)(char*, int)) {
     }
 }
 
-void editorGoto() {
-    std::string offset = editorPrompt("Goto Offset: %s (Use ESC/Arrows/Enter)", nullptr);
+void dhexGoto() {
+    std::string offset = dhexPrompt("Goto Offset: %s (Use ESC/Arrows/Enter)", nullptr);
 
     unsigned int y;
     std::stringstream ss;
@@ -1011,19 +1011,19 @@ void editorGoto() {
     E.cx = x * 3;
 }
 
-bool editorProcessKeypress() {
+bool dhexProcessKeypress() {
     static int quit_times = KILO_QUIT_TIMES;
 
     int c = Term::read_key();
 
     switch (c) {
     case Key::ENTER:
-        if(E.row[E.cy].size == 16*3) editorMoveCursor(Key::ARROW_DOWN);
+        if(E.row[E.cy].size == 16*3) dhexMoveCursor(Key::ARROW_DOWN);
         break;
 
     case Key::CTRL + 'q':
         if (E.dirty && quit_times > 0) {
-            editorSetStatusMessage(
+            dhexSetStatusMessage(
                 "WARNING!!! File has unsaved changes. "
                 "Press Ctrl-Q %d more times to quit.",
                 quit_times);
@@ -1034,11 +1034,11 @@ bool editorProcessKeypress() {
         break;
 
     case Key::CTRL + 's':
-        editorSave();
+        dhexSave();
         break;
 
     case Key::CTRL + 'o':
-        editorLoad();
+        dhexLoad();
         break;
 
     case Key::HOME:
@@ -1051,23 +1051,23 @@ bool editorProcessKeypress() {
         break;
 
     case Key::CTRL + 'g':
-        editorGoto();
+        dhexGoto();
         break;
 
     case Key::BACKSPACE:
     case Key::DEL:
         if (c == Key::DEL) {
-            editorMoveCursor(Key::ARROW_RIGHT);
+            dhexMoveCursor(Key::ARROW_RIGHT);
         }
         else if (c == Key::BACKSPACE) {
             // do a LONG list of things
             if (E.row[E.cy].size > E.cx) {
                 E.row[E.cy].chars[E.cx] = '0';
-                editorUpdateRow(&E.row[E.cy]);
+                dhexUpdateRow(&E.row[E.cy]);
             }
-            editorMoveCursor(Key::ARROW_LEFT);
+            dhexMoveCursor(Key::ARROW_LEFT);
             if ((E.cx + 1) % 3 == 0) {
-                editorMoveCursor(Key::ARROW_LEFT);
+                dhexMoveCursor(Key::ARROW_LEFT);
             }
         }
         break;
@@ -1076,22 +1076,22 @@ bool editorProcessKeypress() {
     case Key::ARROW_DOWN:
     case Key::ARROW_LEFT:
     case Key::ARROW_RIGHT:
-        if ((c == Key::ARROW_DOWN && E.row[E.cy].size == 16 * 3)|| (c == Key::ARROW_RIGHT && (E.row[E.cy].size == 16*3 || E.cx != E.row[E.cy].size)) || (c != Key::ARROW_DOWN && c != Key::ARROW_RIGHT)) editorMoveCursor(c);
+        if ((c == Key::ARROW_DOWN && E.row[E.cy].size == 16 * 3)|| (c == Key::ARROW_RIGHT && (E.row[E.cy].size == 16*3 || E.cx != E.row[E.cy].size)) || (c != Key::ARROW_DOWN && c != Key::ARROW_RIGHT)) dhexMoveCursor(c);
         if ((E.cx + 1) % 3 == 0) {
             if (c == Key::ARROW_RIGHT) {
-                editorMoveCursor(c);
+                dhexMoveCursor(c);
             }
             else if (c == Key::ARROW_LEFT) {
-                editorMoveCursor(c);
+                dhexMoveCursor(c);
             }
         }
         if (E.cx >= 3 * 16 - 1 && c == Key::ARROW_RIGHT) {
             E.cx = 0;
-            editorMoveCursor(Key::ARROW_DOWN);
+            dhexMoveCursor(Key::ARROW_DOWN);
         }
         if (E.cx >= 3 * 16 - 1 && c == Key::ARROW_LEFT) {
-            editorMoveCursor(Key::ARROW_LEFT);
-            editorMoveCursor(Key::ARROW_LEFT);
+            dhexMoveCursor(Key::ARROW_LEFT);
+            dhexMoveCursor(Key::ARROW_LEFT);
         }
         break;
 
@@ -1100,11 +1100,11 @@ bool editorProcessKeypress() {
         break;
 
     case Key::TAB:
-        editorInsertChar('\t');
+        dhexInsertChar('\t');
         break;
 
     default:
-        editorInsertChar(c);
+        dhexInsertChar(c);
         break;
     }
 
@@ -1114,7 +1114,7 @@ bool editorProcessKeypress() {
 
 /*** init ***/
 
-void initEditor() {
+void initdhex() {
     E.cx = 0;
     E.cy = 0;
     E.rx = 0;
@@ -1143,17 +1143,17 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         Terminal term(true, true, false, false);
-        initEditor();
+        initdhex();
         if (argc >= 2) {
-            editorOpen(argv[1]);
+            dhexOpen(argv[1]);
         }
 
-        editorSetStatusMessage(
+        dhexSetStatusMessage(
             "HELP: Ctrl-S = save | Ctrl-O = open | Ctrl-G = goto | Ctrl-Q = quit");
 
-        editorRefreshScreen();
-        while (editorProcessKeypress()) {
-            editorRefreshScreen();
+        dhexRefreshScreen();
+        while (dhexProcessKeypress()) {
+            dhexRefreshScreen();
         }
     }
     catch (const std::runtime_error& re) {
